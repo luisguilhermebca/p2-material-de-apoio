@@ -1,0 +1,1159 @@
+# Herança e Polimorfismo em Java
+
+## 1. Objetivos
+
+Ao terminar este material, você deverá ser capaz de:
+
+- Entender o conceito de herança e sua finalidade.
+- Criar classes que herdam de outras classes usando `extends`.
+- Compreender os modificadores de acesso na herança.
+- Utilizar `super` para acessar construtores e membros da superclasse.
+- Diferenciar sobrescrita (*override*) de sobrecarga (*overload*).
+- Entender e aplicar polimorfismo.
+- Diferenciar o tipo da referência do tipo real do objeto.
+- Utilizar upcasting, downcasting e `instanceof`.
+- Compreender classes abstratas e métodos abstratos.
+- Identificar quando a herança é adequada e quando a composição é melhor.
+
+---
+
+# PARTE I — HERANÇA
+
+## 2. O que é herança?
+
+Herança é um mecanismo da programação orientada a objetos que permite que uma classe reutilize atributos e métodos definidos em outra classe.
+
+Imagine que temos uma classe `Animal`:
+
+```java
+public class Animal {
+    String nome;
+
+    public void comer() {
+        System.out.println(nome + " está comendo.");
+    }
+}
+```
+
+Agora queremos representar um cachorro. Um cachorro é um animal, portanto podemos aproveitar as características já implementadas:
+
+```java
+public class Cachorro extends Animal {
+    public void latir() {
+        System.out.println("Au au!");
+    }
+}
+```
+
+A palavra-chave `extends` indica que `Cachorro` herda de `Animal`.
+
+Podemos utilizar:
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Cachorro cachorro = new Cachorro();
+
+        cachorro.nome = "Rex";
+        cachorro.comer();
+        cachorro.latir();
+    }
+}
+```
+
+Mesmo que `Cachorro` não tenha declarado o atributo `nome` nem o método `comer()`, ele pode utilizá-los porque foram herdados de `Animal`.
+
+**Analogia:** imagine que `Animal` seja um modelo geral de características dos animais. `Cachorro` aproveita esse modelo e acrescenta características próprias.
+
+## 3. Superclasse e subclasse
+
+Na herança, temos dois conceitos fundamentais:
+
+- **Superclasse:** classe que fornece atributos e métodos para outra classe.
+- **Subclasse:** classe que herda de outra classe.
+
+No exemplo:
+
+```java
+class Animal {
+    void comer() {}
+}
+
+class Cachorro extends Animal {
+    void latir() {}
+}
+```
+
+`Animal` é a superclasse e `Cachorro` é a subclasse.
+
+Também podemos encontrar os termos:
+
+- Classe pai: superclasse.
+- Classe filha: subclasse.
+- Classe base: superclasse.
+- Classe derivada: subclasse.
+
+A relação estabelecida pela herança deve representar uma relação de **"é um"**.
+
+Exemplos:
+
+- Cachorro é um Animal.
+- Carro é um Veículo.
+- Gerente é um Funcionário.
+- Circulo é uma Forma.
+
+Se a relação não fizer sentido como "é um", provavelmente a herança não é a melhor escolha.
+
+## 4. O que é herdado?
+
+Uma subclasse pode utilizar os membros herdados da superclasse, respeitando as regras de acesso.
+
+Observe:
+
+```java
+public class Pessoa {
+    public String nome;
+    protected int idade;
+    private String cpf;
+
+    public void apresentar() {
+        System.out.println("Meu nome é " + nome);
+    }
+}
+```
+
+```java
+public class Aluno extends Pessoa {
+    public void estudar() {
+        System.out.println(nome);
+        System.out.println(idade);
+
+        // System.out.println(cpf); // Erro!
+    }
+}
+```
+
+O que acontece?
+
+- `nome`: pode ser acessado porque é `public`.
+- `idade`: pode ser acessado porque é `protected`.
+- `cpf`: não pode ser acessado diretamente porque é `private`.
+
+**Atenção:** membros `private` continuam fazendo parte do estado do objeto, mas não ficam diretamente acessíveis pela subclasse.
+
+A subclasse pode utilizar métodos públicos ou protegidos da superclasse para interagir com esses atributos.
+
+Exemplo:
+
+```java
+public class Pessoa {
+    private String cpf;
+
+    public String getCpf() {
+        return cpf;
+    }
+}
+```
+
+```java
+public class Aluno extends Pessoa {
+    public void mostrarCpf() {
+        System.out.println(getCpf());
+    }
+}
+```
+
+## 5. Modificadores de acesso na herança
+
+| Modificador | Mesma classe | Mesmo pacote | Subclasse em outro pacote | Qualquer classe |
+|---|---|---|---|---|
+| `private` | Sim | Não | Não | Não |
+| Sem modificador | Sim | Sim | Não | Não |
+| `protected` | Sim | Sim | Sim, com regras de acesso | Não |
+| `public` | Sim | Sim | Sim | Sim |
+
+O modificador `protected` merece atenção: ele permite acesso pelas subclasses, inclusive em outros pacotes, mas não transforma o membro em público para qualquer classe.
+
+## 6. Java permite herança múltipla?
+
+Java não permite que uma classe herde diretamente de duas ou mais classes.
+
+Isto é inválido:
+
+```java
+class A {}
+class B {}
+
+// Erro:
+class C extends A, B {}
+```
+
+Uma classe pode estender apenas uma classe diretamente:
+
+```java
+class C extends A {}
+```
+
+Entretanto, Java permite implementar várias interfaces:
+
+```java
+class C implements InterfaceA, InterfaceB {}
+```
+
+Essa distinção é importante:
+
+- Herança de classes: uma única superclasse direta.
+- Implementação de interfaces: várias interfaces.
+
+## 7. Construtores e herança
+
+Um erro comum é acreditar que os construtores são herdados.
+
+**Construtores não são herdados.**
+
+Entretanto, quando criamos um objeto de uma subclasse, o construtor da superclasse também participa da inicialização do objeto.
+
+Exemplo:
+
+```java
+public class Animal {
+    public Animal() {
+        System.out.println("Construtor de Animal");
+    }
+}
+```
+
+```java
+public class Cachorro extends Animal {
+    public Cachorro() {
+        System.out.println("Construtor de Cachorro");
+    }
+}
+```
+
+Executando:
+
+```java
+Cachorro cachorro = new Cachorro();
+```
+
+Saída:
+
+```text
+Construtor de Animal
+Construtor de Cachorro
+```
+
+O construtor da superclasse é executado antes do construtor da subclasse.
+
+### 7.1. Palavra-chave super
+
+A palavra-chave `super` permite acessar membros da superclasse.
+
+Ela possui dois usos particularmente importantes:
+
+1. Chamar o construtor da superclasse.
+2. Acessar métodos ou atributos da superclasse.
+
+Exemplo com construtor:
+
+```java
+public class Pessoa {
+    String nome;
+
+    public Pessoa(String nome) {
+        this.nome = nome;
+    }
+}
+```
+
+```java
+public class Aluno extends Pessoa {
+    int matricula;
+
+    public Aluno(String nome, int matricula) {
+        super(nome);
+        this.matricula = matricula;
+    }
+}
+```
+
+A instrução:
+
+```java
+super(nome);
+```
+
+chama o construtor de `Pessoa`.
+
+**Regra:** quando utilizada, a chamada `super(...)` deve ser a primeira instrução do construtor.
+
+Se você não escrever uma chamada explícita a `super(...)`, o Java tenta inserir automaticamente `super()`.
+
+Isso significa que a superclasse precisa possuir um construtor sem argumentos acessível para que essa chamada implícita funcione.
+
+Exemplo:
+
+```java
+class Animal {
+    public Animal(String nome) {}
+}
+
+class Cachorro extends Animal {
+    public Cachorro() {
+        super("Rex");
+    }
+}
+```
+
+Sem `super("Rex")`, o compilador tentaria chamar `super()`, mas esse construtor não existe.
+
+### 7.2. Acessando métodos da superclasse
+
+Também podemos usar `super` para chamar uma implementação da superclasse:
+
+```java
+class Animal {
+    public void emitirSom() {
+        System.out.println("Som de animal");
+    }
+}
+
+class Cachorro extends Animal {
+    @Override
+    public void emitirSom() {
+        super.emitirSom();
+        System.out.println("Au au!");
+    }
+}
+```
+
+Nesse caso, o método da superclasse é executado antes da implementação específica do cachorro.
+
+---
+
+# PARTE II — SOBRESCRITA E SOBRECARGA
+
+## 8. Sobrescrita de métodos (Override)
+
+Sobrescrita acontece quando uma subclasse fornece uma implementação própria para um método herdado.
+
+Exemplo:
+
+```java
+class Animal {
+    public void emitirSom() {
+        System.out.println("Som genérico");
+    }
+}
+```
+
+```java
+class Cachorro extends Animal {
+    @Override
+    public void emitirSom() {
+        System.out.println("Au au!");
+    }
+}
+```
+
+O método `emitirSom()` existe na superclasse, mas `Cachorro` modifica seu comportamento.
+
+A anotação `@Override` informa ao compilador que queremos sobrescrever um método herdado.
+
+Ela não é obrigatória, mas é altamente recomendada.
+
+Se você escrever um nome ou assinatura incorretos, o compilador poderá identificar o problema.
+
+### 8.1. Regras importantes da sobrescrita
+
+- O método precisa corresponder a um método herdado.
+- A assinatura deve ser compatível.
+- O tipo de retorno deve ser igual ou covariante.
+- A visibilidade não pode ser reduzida.
+- Métodos `final` não podem ser sobrescritos.
+- Métodos `private` não são sobrescritos por subclasses.
+- Métodos `static` são ocultados, não sobrescritos polimorficamente.
+
+Exemplo de erro:
+
+```java
+class Animal {
+    public void comer() {}
+}
+
+class Cachorro extends Animal {
+    // Erro: reduz a visibilidade de public para private.
+    @Override
+    private void comer() {}
+}
+```
+
+## 9. Sobrecarga de métodos (Overload)
+
+Sobrecarga acontece quando existem métodos com o mesmo nome, mas com parâmetros diferentes.
+
+Exemplo:
+
+```java
+class Calculadora {
+    public int somar(int a, int b) {
+        return a + b;
+    }
+
+    public int somar(int a, int b, int c) {
+        return a + b + c;
+    }
+
+    public double somar(double a, double b) {
+        return a + b;
+    }
+}
+```
+
+Observe que os métodos possuem o mesmo nome, mas diferentes listas de parâmetros.
+
+A sobrecarga pode variar:
+
+- Quantidade de parâmetros.
+- Tipos dos parâmetros.
+- Ordem dos tipos dos parâmetros.
+
+**Atenção:** mudar somente o tipo de retorno não caracteriza sobrecarga.
+
+Isto é inválido:
+
+```java
+class Exemplo {
+    int calcular(int x) {
+        return x;
+    }
+
+    // Erro: mesma assinatura, apenas retorno diferente.
+    double calcular(int x) {
+        return x;
+    }
+}
+```
+
+## 10. Diferença entre Override e Overload
+
+| Característica | Override | Overload |
+|---|---|---|
+| Tradução | Sobrescrita | Sobrecarga |
+| Finalidade | Alterar implementação herdada | Oferecer diferentes versões |
+| Relação entre classes | Normalmente envolve herança | Não exige herança |
+| Nome do método | Mesmo nome | Mesmo nome |
+| Parâmetros | Assinatura compatível | Lista de parâmetros diferente |
+| Seleção | Despacho dinâmico para métodos de instância | Resolução em tempo de compilação |
+
+Exemplo para memorizar:
+
+```java
+class Animal {
+    public void emitirSom() {
+        System.out.println("Som");
+    }
+
+    public void comer() {
+        System.out.println("Comendo");
+    }
+
+    public void comer(String alimento) {
+        System.out.println("Comendo " + alimento);
+    }
+}
+
+class Cachorro extends Animal {
+    @Override
+    public void emitirSom() {
+        System.out.println("Au au");
+    }
+}
+```
+
+Nesse código:
+
+- `emitirSom()` em `Cachorro`: override.
+- `comer()` e `comer(String)`: overload.
+
+---
+
+# PARTE III — POLIMORFISMO
+
+## 11. O que é polimorfismo?
+
+Polimorfismo significa "muitas formas".
+
+Em POO, ele permite que objetos de diferentes subclasses sejam tratados por meio de uma referência de uma superclasse comum, mantendo comportamentos específicos.
+
+Considere:
+
+```java
+class Animal {
+    public void emitirSom() {
+        System.out.println("Som genérico");
+    }
+}
+```
+
+```java
+class Cachorro extends Animal {
+    @Override
+    public void emitirSom() {
+        System.out.println("Au au!");
+    }
+}
+```
+
+```java
+class Gato extends Animal {
+    @Override
+    public void emitirSom() {
+        System.out.println("Miau!");
+    }
+}
+```
+
+Agora:
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Animal a1 = new Cachorro();
+        Animal a2 = new Gato();
+
+        a1.emitirSom();
+        a2.emitirSom();
+    }
+}
+```
+
+Saída:
+
+```text
+Au au!
+Miau!
+```
+
+Observe:
+
+```java
+Animal a1 = new Cachorro();
+```
+
+A referência é do tipo `Animal`, mas o objeto criado é um `Cachorro`.
+
+Quando chamamos `a1.emitirSom()`, o Java executa a implementação correspondente ao tipo real do objeto.
+
+Isso é polimorfismo.
+
+## 12. Tipo da referência versus tipo do objeto
+
+Essa distinção é fundamental.
+
+Observe:
+
+```java
+Animal animal = new Cachorro();
+```
+
+Temos:
+
+- Tipo da referência: `Animal`.
+- Tipo real do objeto: `Cachorro`.
+
+O tipo da referência determina quais membros podem ser acessados diretamente durante a compilação.
+
+O tipo real do objeto determina qual implementação sobrescrita de um método de instância será executada em tempo de execução.
+
+Exemplo:
+
+```java
+class Animal {
+    public void comer() {
+        System.out.println("Comendo");
+    }
+}
+
+class Cachorro extends Animal {
+    public void latir() {
+        System.out.println("Au au!");
+    }
+}
+```
+
+```java
+Animal animal = new Cachorro();
+
+animal.comer(); // Funciona.
+animal.latir(); // Erro de compilação.
+```
+
+Por quê?
+
+Porque `animal` foi declarado como `Animal`, e a classe `Animal` não declara o método `latir()`.
+
+Mesmo que o objeto real seja um cachorro, a referência não permite acessar diretamente métodos que não fazem parte do tipo declarado.
+
+Para isso, precisamos de um cast, que será estudado adiante.
+
+## 13. Upcasting
+
+Upcasting é converter uma referência de uma subclasse para uma referência de sua superclasse.
+
+Exemplo:
+
+```java
+Cachorro cachorro = new Cachorro();
+
+Animal animal = cachorro;
+```
+
+Isso é válido porque todo cachorro é um animal.
+
+O upcasting pode ser feito implicitamente, sem cast explícito.
+
+Também podemos escrever:
+
+```java
+Animal animal = (Animal) cachorro;
+```
+
+Mas o cast é desnecessário nesse caso.
+
+O objeto continua sendo um cachorro. Apenas passamos a referenciá-lo pelo tipo mais geral.
+
+**Importante:** upcasting não transforma o objeto e não apaga suas características. Ele altera a forma como o objeto é referenciado.
+
+## 14. Downcasting
+
+Downcasting é converter uma referência de uma superclasse para uma referência de uma subclasse.
+
+Exemplo:
+
+```java
+Animal animal = new Cachorro();
+
+Cachorro cachorro = (Cachorro) animal;
+cachorro.latir();
+```
+
+Isso funciona porque o objeto real é um `Cachorro`.
+
+Entretanto, observe:
+
+```java
+Animal animal = new Gato();
+
+Cachorro cachorro = (Cachorro) animal;
+```
+
+Esse código compila, mas provoca `ClassCastException` em tempo de execução.
+
+O objeto real é um `Gato`, portanto não pode ser tratado como `Cachorro`.
+
+### 14.1. Como evitar erros com instanceof
+
+O operador `instanceof` verifica se um objeto é compatível com determinado tipo.
+
+Exemplo:
+
+```java
+Animal animal = new Cachorro();
+
+if (animal instanceof Cachorro) {
+    Cachorro cachorro = (Cachorro) animal;
+    cachorro.latir();
+}
+```
+
+Em Java 17, também podemos utilizar pattern matching:
+
+```java
+if (animal instanceof Cachorro cachorro) {
+    cachorro.latir();
+}
+```
+
+O Java verifica o tipo e, se a condição for verdadeira, disponibiliza a variável `cachorro` já convertida dentro do bloco.
+
+**Regra prática:** antes de realizar um downcasting, verifique se o objeto realmente pertence ao tipo desejado.
+
+---
+
+# PARTE IV — CLASSES ABSTRATAS
+
+## 15. O que é uma classe abstrata?
+
+Uma classe abstrata é uma classe que não pode ser instanciada diretamente.
+
+Ela serve como base para outras classes.
+
+Exemplo:
+
+```java
+abstract class Animal {
+    public abstract void emitirSom();
+
+    public void comer() {
+        System.out.println("Animal comendo");
+    }
+}
+```
+
+Observe duas características:
+
+- A classe possui a palavra-chave `abstract`.
+- O método `emitirSom()` também é abstrato.
+
+Um método abstrato declara o comportamento esperado, mas não apresenta implementação.
+
+Uma subclasse concreta precisa implementar os métodos abstratos herdados.
+
+```java
+class Cachorro extends Animal {
+    @Override
+    public void emitirSom() {
+        System.out.println("Au au!");
+    }
+}
+```
+
+Agora podemos fazer:
+
+```java
+Animal animal = new Cachorro();
+animal.emitirSom();
+animal.comer();
+```
+
+Mas isto não é permitido:
+
+```java
+Animal animal = new Animal(); // Erro!
+```
+
+## 16. Classes abstratas podem possuir construtores?
+
+Sim.
+
+Embora não possamos instanciar diretamente uma classe abstrata, ela pode possuir construtores.
+
+Esses construtores são executados quando uma subclasse é instanciada.
+
+Exemplo:
+
+```java
+abstract class Animal {
+    String nome;
+
+    public Animal(String nome) {
+        this.nome = nome;
+    }
+}
+```
+
+```java
+class Cachorro extends Animal {
+    public Cachorro(String nome) {
+        super(nome);
+    }
+}
+```
+
+O construtor de `Animal` inicializa o atributo `nome`, mesmo que não seja possível criar diretamente um objeto `Animal`.
+
+## 17. Classe abstrata pode ter métodos concretos?
+
+Sim.
+
+Uma classe abstrata pode possuir:
+
+- Métodos abstratos.
+- Métodos concretos.
+- Atributos.
+- Construtores.
+- Métodos estáticos.
+- Métodos finais.
+
+Exemplo:
+
+```java
+abstract class Funcionario {
+    String nome;
+
+    public Funcionario(String nome) {
+        this.nome = nome;
+    }
+
+    public abstract double calcularSalario();
+
+    public void apresentar() {
+        System.out.println("Funcionário: " + nome);
+    }
+}
+```
+
+A classe exige que as subclasses implementem `calcularSalario()`, mas oferece uma implementação compartilhada de `apresentar()`.
+
+## 18. Classe abstrata versus interface
+
+As duas permitem definir contratos, mas possuem diferenças.
+
+| Característica | Classe abstrata | Interface |
+|---|---|---|
+| Palavra-chave | `abstract class` | `interface` |
+| Herança/implementação | Uma superclasse direta | Várias interfaces |
+| Construtores | Sim | Não |
+| Atributos de instância | Sim | Não |
+| Métodos abstratos | Sim | Sim |
+| Métodos concretos | Sim | Sim, com `default` e `static`, entre outros recursos |
+| Estado de objeto | Pode manter estado | Não mantém atributos de instância |
+
+Uma classe abstrata é útil quando subclasses compartilham uma base comum de estado e implementação.
+
+Uma interface é útil quando queremos definir uma capacidade ou contrato que diferentes classes podem implementar, mesmo que não tenham uma relação de herança entre si.
+
+---
+
+# PARTE V — BOAS PRÁTICAS
+
+## 19. Quando utilizar herança?
+
+Utilize herança quando existir uma relação legítima de "é um".
+
+Exemplo:
+
+```java
+class Veiculo {}
+
+class Carro extends Veiculo {}
+```
+
+Um carro é um veículo.
+
+Agora considere:
+
+```java
+class Motor {}
+
+class Carro extends Motor {}
+```
+
+Isso não faz sentido. Um carro não é um motor.
+
+A relação correta pode ser representada por composição:
+
+```java
+class Motor {}
+
+class Carro {
+    private Motor motor;
+}
+```
+
+Um carro possui um motor.
+
+## 20. Herança versus composição
+
+**Herança:** representa uma relação "é um".
+
+**Composição:** representa uma relação "tem um" ou "é composto por".
+
+Exemplos:
+
+- Cachorro é um Animal: herança.
+- Carro tem um Motor: composição.
+- Computador tem uma PlacaMae: composição.
+- Gerente é um Funcionário: herança.
+
+A composição costuma ser mais flexível porque permite trocar os componentes de um objeto sem criar uma hierarquia de classes.
+
+Não utilize herança apenas para evitar repetir algumas linhas de código.
+
+## 21. Palavra-chave final na herança
+
+A palavra-chave `final` pode impedir modificações por herança.
+
+### Classe final
+
+```java
+final class Animal {}
+```
+
+Nenhuma classe pode estender `Animal`.
+
+### Método final
+
+```java
+class Animal {
+    public final void respirar() {}
+}
+```
+
+Uma subclasse pode herdar esse método, mas não pode sobrescrevê-lo.
+
+### Atributo final
+
+```java
+class Pessoa {
+    final int idade = 20;
+}
+```
+
+O atributo não pode receber uma nova atribuição depois de inicializado.
+
+---
+
+# PARTE VI — QUESTÕES TEÓRICAS
+
+Responda às questões antes de consultar o gabarito.
+
+## Bloco A — Conceitos fundamentais
+
+**1.** O que é herança em programação orientada a objetos?
+
+**2.** Qual é a diferença entre superclasse e subclasse?
+
+**3.** O que significa dizer que uma subclasse estabelece uma relação de "é um" com sua superclasse?
+
+**4.** Qual é a finalidade da palavra-chave `extends`?
+
+**5.** Uma subclasse herda os construtores de sua superclasse? Explique.
+
+**6.** Java permite que uma classe estenda duas classes diretamente? Justifique.
+
+**7.** Qual é a diferença entre herança e composição?
+
+**8.** Uma classe pode herdar atributos e métodos privados de outra classe? Explique a diferença entre herdar e acessar diretamente.
+
+## Bloco B — Modificadores e construtores
+
+**9.** Qual é a diferença entre `private`, `protected` e `public` no contexto da herança?
+
+**10.** Uma subclasse consegue acessar diretamente um atributo `private` da superclasse?
+
+**11.** Qual é a finalidade da palavra-chave `super`?
+
+**12.** O que acontece quando o programador não escreve explicitamente `super()` no construtor da subclasse?
+
+**13.** Por que uma subclasse pode apresentar erro de compilação quando a superclasse possui apenas construtores com parâmetros?
+
+**14.** Qual é a ordem de execução dos construtores quando uma subclasse é instanciada?
+
+**15.** É possível utilizar `super` para chamar um método da superclasse? Demonstre conceitualmente.
+
+## Bloco C — Override e Overload
+
+**16.** O que é sobrescrita de métodos?
+
+**17.** O que é sobrecarga de métodos?
+
+**18.** Qual é a principal diferença entre override e overload?
+
+**19.** A anotação `@Override` é obrigatória? Qual é sua utilidade?
+
+**20.** É possível realizar sobrecarga alterando somente o tipo de retorno de um método?
+
+**21.** Um método `private` pode ser sobrescrito por uma subclasse?
+
+**22.** Um método `final` pode ser sobrescrito?
+
+**23.** Métodos estáticos são sobrescritos da mesma forma que métodos de instância? Explique.
+
+**24.** Uma subclasse pode reduzir a visibilidade de um método público ao sobrescrevê-lo?
+
+## Bloco D — Polimorfismo e conversões
+
+**25.** O que é polimorfismo?
+
+**26.** Explique a diferença entre o tipo da referência e o tipo real do objeto.
+
+**27.** Considere:
+
+```java
+Animal animal = new Cachorro();
+```
+
+Qual é o tipo da referência e qual é o tipo real do objeto?
+
+**28.** Qual é a finalidade do upcasting?
+
+**29.** O upcasting precisa ser realizado explicitamente?
+
+**30.** O que é downcasting?
+
+**31.** Qual problema pode acontecer quando realizamos um downcasting incorreto?
+
+**32.** Para que serve o operador `instanceof`?
+
+**33.** Considere:
+
+```java
+Animal animal = new Cachorro();
+```
+
+Se `Cachorro` possui um método `latir()` que não existe em `Animal`, podemos executar diretamente `animal.latir()`? Justifique.
+
+**34.** No polimorfismo, o que determina qual implementação sobrescrita de um método será executada?
+
+## Bloco E — Classes abstratas e boas práticas
+
+**35.** O que é uma classe abstrata?
+
+**36.** É possível instanciar diretamente uma classe abstrata?
+
+**37.** Uma classe abstrata pode possuir métodos concretos?
+
+**38.** Uma classe abstrata pode possuir construtores?
+
+**39.** Uma classe concreta que estende uma classe abstrata precisa implementar todos os métodos abstratos herdados?
+
+**40.** Quando devemos preferir composição à herança?
+
+---
+
+# PARTE VII — EXERCÍCIOS PRÁTICOS
+
+Implemente os exercícios em arquivos Java. Não consulte o gabarito antes de tentar resolver.
+
+## Exercício 1 — Pessoa e Aluno
+
+Crie uma classe `Pessoa` com:
+
+- Atributo `nome`.
+- Construtor que recebe o nome.
+- Método `apresentar()` que imprime o nome.
+
+Crie uma classe `Aluno` que herda de `Pessoa` e possui:
+
+- Atributo `matricula`.
+- Construtor que recebe nome e matrícula.
+- Método `mostrarMatricula()`.
+
+Requisitos:
+
+1. Utilize `extends`.
+2. Utilize `super(nome)` no construtor de `Aluno`.
+3. Crie um objeto `Aluno` e execute seus métodos.
+
+## Exercício 2 — Sobrescrita de métodos
+
+Crie uma classe `Animal` com o método:
+
+```java
+public void emitirSom()
+```
+
+Crie duas subclasses:
+
+- `Cachorro`: imprime "Au au!".
+- `Gato`: imprime "Miau!".
+
+Utilize `@Override` nas duas subclasses.
+
+Teste os três métodos criando objetos de cada classe.
+
+## Exercício 3 — Polimorfismo
+
+Utilizando as classes do exercício anterior, crie:
+
+```java
+Animal animal1 = new Cachorro();
+Animal animal2 = new Gato();
+```
+
+Execute `emitirSom()` nas duas referências.
+
+Responda:
+
+1. Qual é o tipo das referências?
+2. Qual é o tipo real dos objetos?
+3. Por que cada referência executa um som diferente?
+
+## Exercício 4 — Downcasting e instanceof
+
+Considere:
+
+```java
+Animal animal = new Gato();
+```
+
+Tente converter a referência para `Cachorro`.
+
+Responda:
+
+1. O código compila?
+2. A conversão funciona em tempo de execução?
+3. Qual exceção pode ser lançada?
+4. Como `instanceof` pode evitar esse erro?
+
+## Exercício 5 — Construtores e super
+
+Crie uma classe `Veiculo` com:
+
+- Atributo `modelo`.
+- Construtor que recebe o modelo.
+- Método `mostrarModelo()`.
+
+Crie uma classe `Carro` que herda de `Veiculo` e possui:
+
+- Atributo `quantidadePortas`.
+- Construtor que recebe modelo e quantidade de portas.
+- Método `mostrarPortas()`.
+
+Utilize `super(modelo)` para inicializar o atributo herdado.
+
+## Exercício 6 — Classe abstrata
+
+Crie uma classe abstrata `Forma` com o método abstrato:
+
+```java
+public abstract double calcularArea();
+```
+
+Crie uma classe `Quadrado` que herda de `Forma` e possui um atributo `lado`.
+
+Implemente `calcularArea()` retornando:
+
+\[
+lado \times lado
+\]
+
+Crie um objeto `Quadrado` e imprima sua área.
+
+Depois, tente instanciar diretamente `Forma` e observe o erro de compilação.
+
+---
+
+# DESAFIO FINAL
+
+Crie um pequeno sistema de funcionários.
+
+A classe abstrata `Funcionario` deve possuir:
+
+- Atributo `nome`.
+- Construtor.
+- Método abstrato `calcularSalario()`.
+- Método concreto `mostrarNome()`.
+
+Crie duas subclasses:
+
+**Gerente**
+- Possui um atributo `bonus`.
+- O salário é um valor fixo de R$ 5.000,00 somado ao bônus.
+
+**Desenvolvedor**
+- Possui um atributo `horasTrabalhadas`.
+- Recebe R$ 50,00 por hora trabalhada.
+
+Na classe `Main`:
+
+1. Crie um `Gerente`.
+2. Crie um `Desenvolvedor`.
+3. Armazene os dois em referências do tipo `Funcionario`.
+4. Execute `mostrarNome()` e `calcularSalario()` para ambos.
+5. Demonstre o polimorfismo.
+
+**Objetivo:** utilizar herança, construtores, `super`, classes abstratas, sobrescrita e polimorfismo em um único programa.
